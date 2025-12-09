@@ -1,0 +1,149 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: rust_forge_db
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - rust_forge_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # # Redis Cache
+  # redis:
+  #   image: redis:7-alpine
+  #   ports:
+  #     - "6378:6379"
+  #   networks:
+  #     - rust_forge_network
+  #   healthcheck:
+  #     test: ["CMD", "redis-cli", "ping"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+
+  # # MongoDB (Optional)
+  # mongodb:
+  #   image: mongo:7
+  #   environment:
+  #     MONGO_INITDB_DATABASE: rust_forge_db
+  #   volumes:
+  #     - mongodb_data:/data/db
+  #   ports:
+  #     - "27017:27017"
+  #   networks:
+  #     - rust_forge_network
+  #   healthcheck:
+  #     test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+
+  # # Database Migrator (Run once)
+  # migrator:
+  #   build:
+  #     context: ..
+  #     dockerfile: deployment/Dockerfile.migrator
+  #   environment:
+  #     - RUST_LOG=info
+  #     - APP__DATABASE__URL=postgresql://user:password@postgres:5432/rust_forge_db
+  #     - APP__DATABASE__MAX_CONNECTIONS=10
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #   networks:
+  #     - rust_forge_network
+  #   restart: "no"
+
+  # # HTTP Server
+  # server:
+  #   build:
+  #     context: ..
+  #     dockerfile: deployment/Dockerfile.server
+  #   ports:
+  #     - "8080:8080"
+  #   environment:
+  #     - RUST_LOG=info
+  #     - APP__SERVER__HOST=0.0.0.0
+  #     - APP__SERVER__PORT=8080
+  #     - APP__DATABASE__URL=postgresql://user:password@postgres:5432/rust_forge_db
+  #     - APP__DATABASE__MAX_CONNECTIONS=10
+  #     - APP__REDIS__URL=redis://redis:6379
+  #     - APP__MONGODB__URL=mongodb://mongodb:27017
+  #     - APP__MONGODB__DATABASE=rust_forge_db
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_healthy
+  #     mongodb:
+  #       condition: service_healthy
+  #     migrator:
+  #       condition: service_completed_successfully
+  #   networks:
+  #     - rust_forge_network
+  #   restart: unless-stopped
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:8080/api/health"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
+  #     start_period: 40s
+
+  # # Background Worker
+  # worker:
+  #   build:
+  #     context: ..
+  #     dockerfile: deployment/Dockerfile.worker
+  #   environment:
+  #     - RUST_LOG=info
+  #     - APP__DATABASE__URL=postgresql://user:password@postgres:5432/rust_forge_db
+  #     - APP__DATABASE__MAX_CONNECTIONS=10
+  #     - APP__REDIS__URL=redis://redis:6379
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_healthy
+  #     migrator:
+  #       condition: service_completed_successfully
+  #   networks:
+  #     - rust_forge_network
+  #   restart: unless-stopped
+
+  # # Task Scheduler
+  # scheduler:
+  #   build:
+  #     context: ..
+  #     dockerfile: deployment/Dockerfile.scheduler
+  #   environment:
+  #     - RUST_LOG=info
+  #     - APP__DATABASE__URL=postgresql://user:password@postgres:5432/rust_forge_db
+  #     - APP__DATABASE__MAX_CONNECTIONS=10
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #     migrator:
+  #       condition: service_completed_successfully
+  #   networks:
+  #     - rust_forge_network
+  #   restart: unless-stopped
+
+networks:
+  rust_forge_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  mongodb_data:

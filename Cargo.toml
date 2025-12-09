@@ -3,6 +3,7 @@
 resolver = '2'
 members = [
 	'apps/rust_forge_boilerplate',
+	'apps/user_services',
 ]
 
 [profile.release]

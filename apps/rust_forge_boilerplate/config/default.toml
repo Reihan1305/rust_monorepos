@@ -1,0 +1,14 @@
+[server]
+host = "127.0.0.1"
+port = 8080
+
+[database]
+url = "postgresql://user:password@localhost:5432/rust_forge_db"
+max_connections = 10
+
+[redis]
+url = "redis://localhost:6379"
+
+[mongodb]
+url = "mongodb://localhost:27017"
+database = "rust_forge_db"

@@ -1,5 +1,4 @@
 use rust_forge_boilerplate::common::{config::AppConfig, infrastructure};
-use tokio_cron_scheduler::{Job, JobScheduler};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 #[tokio::main]
@@ -22,24 +21,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     )
     .await?;
 
-    tracing::info!("Scheduler started");
+    tracing::info!("Running seeders...");
 
-    let scheduler = JobScheduler::new().await?;
+    // TODO: Add your seeding logic here
+    // Example:
+    // sqlx::query!("INSERT INTO users (name, email) VALUES ($1, $2)", "Admin", "admin@example.com")
+    //     .execute(&db_pool)
+    //     .await?;
 
-    // Example job: runs every minute
-    scheduler
-        .add(Job::new_async("0 * * * * *", |_uuid, _l| {
-            Box::pin(async move {
-                tracing::info!("Scheduled job executed");
-                // TODO: Add your scheduled tasks here
-            })
-        })?)
-        .await?;
+    tracing::info!("Seeding completed successfully");
 
-    scheduler.start().await?;
-
-    // Keep the scheduler running
-    loop {
-        tokio::time::sleep(tokio::time::Duration::from_secs(60)).await;
-    }
+    Ok(())
 }

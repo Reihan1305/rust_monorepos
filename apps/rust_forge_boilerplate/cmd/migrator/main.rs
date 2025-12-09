@@ -1,4 +1,5 @@
 use rust_forge_boilerplate::common::{config::AppConfig, infrastructure};
+use sqlx::migrate::MigrateDatabase;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 #[tokio::main]
@@ -14,23 +15,26 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let config = AppConfig::new()?;
 
-    // Initialize database pool
-    let _db_pool = infrastructure::database::create_pool(
+    tracing::info!("Running migrations...");
+
+    // Create database if it doesn't exist
+    if !sqlx::Postgres::database_exists(&config.database.url).await? {
+        tracing::info!("Database does not exist, creating...");
+        sqlx::Postgres::create_database(&config.database.url).await?;
+    }
+
+    // Run migrations
+    let pool = infrastructure::database::create_pool(
         &config.database.url,
         config.database.max_connections,
     )
     .await?;
 
-    // Initialize Redis connection
-    let _redis_conn = infrastructure::redis::create_connection(&config.redis.url).await?;
+    sqlx::migrate!("./migrations")
+        .run(&pool)
+        .await?;
 
-    tracing::info!("Worker started");
+    tracing::info!("Migrations completed successfully");
 
-    // Worker loop - process background jobs
-    loop {
-        // TODO: Implement job processing logic
-        // Example: fetch jobs from Redis queue, process them
-        tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
-        tracing::debug!("Worker tick...");
-    }
+    Ok(())
 }
