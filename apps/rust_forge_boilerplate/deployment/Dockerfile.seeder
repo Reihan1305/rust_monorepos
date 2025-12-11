@@ -1,5 +1,5 @@
 # Build stage
-FROM rust:1.75 as builder
+FROM rust:latest as builder
 
 WORKDIR /app
 
@@ -11,6 +11,8 @@ COPY cmd ./cmd
 COPY common ./common
 COPY healthcheck_modules ./healthcheck_modules
 COPY lib.rs ./
+COPY error.json ./error.json
+
 # Build for release
 RUN cargo build --release --bin seeder
 
@@ -28,8 +30,8 @@ WORKDIR /app
 # Copy binary from builder
 COPY --from=builder /app/target/release/seeder /usr/local/bin/seeder
 
-# Copy config files
-COPY --from=builder /app/config /app/config
+# Copy error config
+COPY --from=builder /app/error.json /app/error.json
 
 # Create non-root user
 RUN useradd -m -u 1000 appuser && \

@@ -1,5 +1,5 @@
 # Build stage
-FROM rust:1.75 as builder
+FROM rust:latest as builder
 
 WORKDIR /app
 
@@ -12,6 +12,7 @@ COPY common ./common
 COPY healthcheck_modules ./healthcheck_modules
 COPY lib.rs ./
 COPY migrations ./migrations
+COPY error.json ./error.json
 
 # Build for release
 RUN cargo build --release --bin migrator
@@ -30,9 +31,9 @@ WORKDIR /app
 # Copy binary from builder
 COPY --from=builder /app/target/release/migrator /usr/local/bin/migrator
 
-# Copy migrations and config
+# Copy migrations and error config
 COPY --from=builder /app/migrations /app/migrations
-COPY --from=builder /app/config /app/config
+COPY --from=builder /app/error.json /app/error.json
 
 # Create non-root user
 RUN useradd -m -u 1000 appuser && \
