@@ -1,0 +1,42 @@
+# Build stage
+FROM rust:latest as builder
+
+WORKDIR /app
+
+# Copy manifests
+COPY Cargo.toml ./
+
+# Copy source code
+COPY cmd ./cmd
+COPY common ./common
+COPY healthcheck_modules ./healthcheck_modules
+COPY lib.rs ./
+COPY error.json ./error.json
+
+# Build for release
+RUN cargo build --release --bin seeder
+
+# Runtime stage
+FROM debian:bookworm-slim
+
+# Install runtime dependencies
+RUN apt-get update && apt-get install -y \
+    libpq5 \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copy binary from builder
+COPY --from=builder /app/target/release/seeder /usr/local/bin/seeder
+
+# Copy error config
+COPY --from=builder /app/error.json /app/error.json
+
+# Create non-root user
+RUN useradd -m -u 1000 appuser && \
+    chown -R appuser:appuser /app
+
+USER appuser
+
+CMD ["seeder"]

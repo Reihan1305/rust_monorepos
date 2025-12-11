@@ -1,0 +1,14 @@
+{
+  "3000": "An internal server error occurred",
+  "3001": "The request is invalid or malformed",
+  "3002": "The requested resource was not found",
+  "3003": "Authentication is required to access this resource",
+  "3004": "The provided data failed validation",
+  "3005": "A database operation failed",
+  "3100": "Service unavailable",
+  "3101": "Configuration error",
+  "3102": "External service error",
+  "3103": "Rate limit exceeded for this service",
+  "3104": "Invalid API key",
+  "3105": "Service maintenance mode"
+}

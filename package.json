@@ -2,7 +2,9 @@
   "name": "@rust-monorepo/source",
   "version": "0.0.0",
   "license": "MIT",
-  "scripts": {},
+  "scripts": {
+    "create:rust-app": "node tools/create-rust-app.js"
+  },
   "private": true,
   "dependencies": {
     "@monodon/rust": "2.3.0"
