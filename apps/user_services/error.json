@@ -1,0 +1,18 @@
+{
+  "1000": "An internal server error occurred",
+  "1001": "The request is invalid or malformed",
+  "1002": "The requested resource was not found",
+  "1003": "Authentication is required to access this resource",
+  "1004": "The provided data failed validation",
+  "1005": "A database operation failed",
+  "2000": "User not found",
+  "2001": "User already exists",
+  "2002": "Invalid username or password",
+  "2003": "Email address is already registered",
+  "2004": "Password does not meet security requirements",
+  "2005": "Email format is invalid",
+  "2006": "Authentication token has expired",
+  "2007": "Authentication token is invalid",
+  "2008": "You don't have permission to perform this action",
+  "2009": "Too many requests, please try again later"
+}

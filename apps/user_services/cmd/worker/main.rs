@@ -14,19 +14,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let config = AppConfig::new()?;
 
-    // Initialize database pool
     let _db_pool = infrastructure::database::create_pool(
         &config.database.url,
         config.database.max_connections,
     )
     .await?;
 
-    // Initialize Redis connection
     let _redis_conn = infrastructure::redis::create_connection(&config.redis.url).await?;
 
     tracing::info!("Worker started");
 
-    // Worker loop - process background jobs
     loop {
         // TODO: Implement job processing logic
         // Example: fetch jobs from Redis queue, process them

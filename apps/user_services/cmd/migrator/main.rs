@@ -17,13 +17,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     tracing::info!("Running migrations...");
 
-    // Create database if it doesn't exist
     if !sqlx::Postgres::database_exists(&config.database.url).await? {
         tracing::info!("Database does not exist, creating...");
         sqlx::Postgres::create_database(&config.database.url).await?;
     }
 
-    // Run migrations
     let pool = infrastructure::database::create_pool(
         &config.database.url,
         config.database.max_connections,

@@ -4,7 +4,7 @@ use actix_web::{HttpResponse, ResponseError};
 use sqlx::PgPool;
 
 use crate::{
-    common::error::{AppError, AppErrorTrait},
+    common::utils::error::{AppError, AppErrorTrait},
     user_modules::{
         dto::{CreateUserDto, CreateUserResponse},
         repo::UserRepoTrait,

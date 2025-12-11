@@ -20,7 +20,6 @@ impl CryptoUtils {
 
     pub fn compare_password(hash_password: &str, password: &str) -> Result<(), String> {
         let argon2 = Argon2::default();
-
         let parsed_hash = match PasswordHash::new(password) {
             Ok(parsed_hash) => parsed_hash,
             Err(err) => {

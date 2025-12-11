@@ -12,5 +12,4 @@ pub struct ReadinessResponse {
     pub ready: bool,
     pub database: bool,
     pub redis: bool,
-    pub mongodb: bool,
 }

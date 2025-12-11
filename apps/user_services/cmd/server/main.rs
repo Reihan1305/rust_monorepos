@@ -13,10 +13,11 @@ use user_services::{
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    let user_repo = Arc::new(UserRepo::new());
-    let user_services = Arc::new(UserServices::new(user_repo));
+    let user_services = Arc::new(UserServices::new(Arc::new(UserRepo::new())));
 
     dotenv::dotenv().ok();
+
+    let config = AppConfig::new().expect("Failed to load configuration");
 
     tracing_subscriber::registry()
         .with(tracing_subscriber::EnvFilter::new(
@@ -24,8 +25,6 @@ async fn main() -> std::io::Result<()> {
         ))
         .with(tracing_subscriber::fmt::layer())
         .init();
-
-    let config = AppConfig::new().expect("Failed to load configuration");
 
     let db_pool = infrastructure::database::PostgresDatabase::create_pool(
         &config.database.url,
@@ -38,11 +37,6 @@ async fn main() -> std::io::Result<()> {
         .await
         .expect("Failed to create Redis connection");
 
-    let mongo_db =
-        infrastructure::mongodb::create_client(&config.mongodb.url, &config.mongodb.database)
-            .await
-            .expect("Failed to create MongoDB client");
-
     let bind_address = format!("{}:{}", config.server.host, config.server.port);
     tracing::info!("Starting server at {}", bind_address);
 
@@ -52,7 +46,6 @@ async fn main() -> std::io::Result<()> {
             .app_data(actix_web::web::Data::new(user_services.clone()))
             .app_data(actix_web::web::Data::new(db_pool.clone()))
             .app_data(actix_web::web::Data::new(redis_conn.clone()))
-            .app_data(actix_web::web::Data::new(mongo_db.clone()))
             .configure(healthcheck_modules::configure_routes)
             .configure(user_modules::user_routes)
     })

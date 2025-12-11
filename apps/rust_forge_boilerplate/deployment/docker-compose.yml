@@ -11,7 +11,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5433:5432"  # Different port to avoid conflicts with user_services
+      - "5433:5432"
     networks:
       - rust_forge_network
     healthcheck:
@@ -21,112 +21,112 @@ services:
       retries: 5
 
   # Redis Cache
-  # redis:
-  #   image: redis:7-alpine
-  #   ports:
-  #     - "6380:6379"  # Different port to avoid conflicts
-  #   networks:
-  #     - rust_forge_network
-  #   healthcheck:
-  #     test: ["CMD", "redis-cli", "ping"]
-  #     interval: 10s
-  #     timeout: 5s
-  #     retries: 5
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6380:6379"  # Different port to avoid conflicts
+    networks:
+      - rust_forge_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  # # MongoDB (Optional)
-  # mongodb:
-  #   image: mongo:7
-  #   environment:
-  #     MONGO_INITDB_DATABASE: rust_forge_boilerplate_db
-  #   volumes:
-  #     - mongodb_data:/data/db
-  #   ports:
-  #     - "27018:27017"  # Different port to avoid conflicts
-  #   networks:
-  #     - rust_forge_network
-  #   healthcheck:
-  #     test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
-  #     interval: 10s
-  #     timeout: 5s
-  #     retries: 5
+  # MongoDB (Optional)
+  mongodb:
+    image: mongo:7
+    environment:
+      MONGO_INITDB_DATABASE: rust_forge_boilerplate_db
+    volumes:
+      - mongodb_data:/data/db
+    ports:
+      - "27018:27017"  # Different port to avoid conflicts
+    networks:
+      - rust_forge_network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  # # Database Migrator (Run once)
-  # migrator:
-  #   build:
-  #     context: ..
-  #     dockerfile: deployment/Dockerfile.migrator
-  #   env_file:
-  #     - ../.env
-  #   depends_on:
-  #     postgres:
-  #       condition: service_healthy
-  #   networks:
-  #     - rust_forge_network
-  #   restart: "no"
+  # Database Migrator (Run once)
+  migrator:
+    build:
+      context: ..
+      dockerfile: deployment/Dockerfile.migrator
+    env_file:
+      - ../.env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - rust_forge_network
+    restart: "no"
 
-  # # HTTP Server
-  # server:
-  #   build:
-  #     context: ..
-  #     dockerfile: deployment/Dockerfile.server
-  #   ports:
-  #     - "${SERVER_PORT:-8081}:${SERVER_PORT:-8081}"
-  #   env_file:
-  #     - ../.env
-  #   environment:
-  #     - SERVER_HOST=0.0.0.0
-  #   depends_on:
-  #     postgres:
-  #       condition: service_healthy
-  #     redis:
-  #       condition: service_healthy
-  #     mongodb:
-  #       condition: service_healthy
-  #     migrator:
-  #       condition: service_completed_successfully
-  #   networks:
-  #     - rust_forge_network
-  #   restart: unless-stopped
-  #   healthcheck:
-  #     test: ["CMD", "curl", "-f", "http://localhost:${SERVER_PORT:-8081}/api/health"]
-  #     interval: 30s
-  #     timeout: 10s
-  #     retries: 3
-  #     start_period: 40s
+  # HTTP Server
+  server:
+    build:
+      context: ..
+      dockerfile: deployment/Dockerfile.server
+    ports:
+      - "${SERVER_PORT:-8081}:${SERVER_PORT:-8081}"
+    env_file:
+      - ../.env
+    environment:
+      - SERVER_HOST=0.0.0.0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+      migrator:
+        condition: service_completed_successfully
+    networks:
+      - rust_forge_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${SERVER_PORT:-8081}/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
-  # # Background Worker
-  # worker:
-  #   build:
-  #     context: ..
-  #     dockerfile: deployment/Dockerfile.worker
-  #   env_file:
-  #     - ../.env
-  #   depends_on:
-  #     postgres:
-  #       condition: service_healthy
-  #     redis:
-  #       condition: service_healthy
-  #     migrator:
-  #       condition: service_completed_successfully
-  #   networks:
-  #     - rust_forge_network
-  #   restart: unless-stopped
+  # Background Worker
+  worker:
+    build:
+      context: ..
+      dockerfile: deployment/Dockerfile.worker
+    env_file:
+      - ../.env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrator:
+        condition: service_completed_successfully
+    networks:
+      - rust_forge_network
+    restart: unless-stopped
 
-  # # Task Scheduler
-  # scheduler:
-  #   build:
-  #     context: ..
-  #     dockerfile: deployment/Dockerfile.scheduler
-  #   env_file:
-  #     - ../.env
-  #   depends_on:
-  #     postgres:
-  #       condition: service_healthy
-  #     migrator:
-  #       condition: service_completed_successfully
-  #   networks:
-  #     - rust_forge_network
-  #   restart: unless-stopped
+  # Task Scheduler
+  scheduler:
+    build:
+      context: ..
+      dockerfile: deployment/Dockerfile.scheduler
+    env_file:
+      - ../.env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrator:
+        condition: service_completed_successfully
+    networks:
+      - rust_forge_network
+    restart: unless-stopped
 
 networks:
   rust_forge_network:

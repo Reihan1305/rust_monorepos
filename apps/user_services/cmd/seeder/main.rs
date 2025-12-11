@@ -14,7 +14,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let config = AppConfig::new()?;
 
-    // Initialize database pool
     let _db_pool = infrastructure::database::create_pool(
         &config.database.url,
         config.database.max_connections,

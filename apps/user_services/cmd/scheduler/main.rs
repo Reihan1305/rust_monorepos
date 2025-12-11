@@ -15,7 +15,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let config = AppConfig::new()?;
 
-    // Initialize database pool
     let _db_pool = infrastructure::database::create_pool(
         &config.database.url,
         config.database.max_connections,
@@ -26,19 +25,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let scheduler = JobScheduler::new().await?;
 
-    // Example job: runs every minute
     scheduler
         .add(Job::new_async("0 * * * * *", |_uuid, _l| {
             Box::pin(async move {
                 tracing::info!("Scheduled job executed");
-                // TODO: Add your scheduled tasks here
             })
         })?)
         .await?;
 
     scheduler.start().await?;
 
-    // Keep the scheduler running
     loop {
         tokio::time::sleep(tokio::time::Duration::from_secs(60)).await;
     }

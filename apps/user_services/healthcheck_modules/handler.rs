@@ -1,6 +1,5 @@
 use crate::healthcheck_modules::dto::{HealthResponse, ReadinessResponse};
 use actix_web::{web, HttpResponse};
-use mongodb::Database;
 use redis::aio::ConnectionManager;
 use sqlx::PgPool;
 
@@ -16,7 +15,6 @@ pub async fn health_check() -> HttpResponse {
 pub async fn readiness_check(
     db_pool: web::Data<PgPool>,
     redis_conn: web::Data<ConnectionManager>,
-    mongo_db: web::Data<Database>,
 ) -> HttpResponse {
     let mut ready = true;
 
@@ -37,19 +35,10 @@ pub async fn readiness_check(
         ready = false;
     }
 
-    let mongo_ready = mongo_db
-        .run_command(mongodb::bson::doc! { "ping": 1 }, None)
-        .await
-        .is_ok();
-    if !mongo_ready {
-        ready = false;
-    }
-
     let response = ReadinessResponse {
         ready,
         database: db_ready,
         redis: redis_ready,
-        mongodb: mongo_ready,
     };
 
     if ready {
