@@ -1,5 +1,6 @@
+use std::env;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
-use user_services::common::{config::AppConfig, infrastructure};
+use user_services::common::infrastructure::{self, redis::RedisClient};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -7,20 +8,23 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     tracing_subscriber::registry()
         .with(tracing_subscriber::EnvFilter::new(
-            std::env::var("RUST_LOG").unwrap_or_else(|_| "info".into()),
+            env::var("RUST_LOG").unwrap_or_else(|_| "info".into()),
         ))
         .with(tracing_subscriber::fmt::layer())
         .init();
 
-    let config = AppConfig::new()?;
+    let database_url =
+        env::var("DATABASE_URL").expect("DATABASE_URL environment variable is required");
+    let database_max_connections: u32 = env::var("DATABASE_MAX_CONNECTIONS")
+        .unwrap_or_else(|_| "10".to_string())
+        .parse()
+        .expect("Invalid DATABASE_MAX_CONNECTIONS");
 
-    let _db_pool = infrastructure::database::create_pool(
-        &config.database.url,
-        config.database.max_connections,
-    )
-    .await?;
+    let _db_pool =
+        infrastructure::database::create_pool(&database_url, database_max_connections).await?;
 
-    let _redis_conn = infrastructure::redis::create_connection(&config.redis.url).await?;
+    let redis_url = env::var("REDIS_URL").expect("REDIS_URL environment variable is required");
+    let _redis_conn = infrastructure::redis::RedisClientImpl::create_connection(&redis_url).await?;
 
     tracing::info!("Worker started");
 
@@ -28,6 +32,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         // TODO: Implement job processing logic
         // Example: fetch jobs from Redis queue, process them
         tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
-        tracing::debug!("Worker tick...");
+        tracing::info!("Worker tick...");
     }
 }

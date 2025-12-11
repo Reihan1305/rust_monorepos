@@ -51,6 +51,37 @@ cargo run --bin seeder
 cargo run --bin server
 ```
 
+### Docker Deployment
+
+#### Development Environment
+
+```bash
+# Start all services with docker-compose
+cd deployment
+docker compose up -d
+
+# View logs
+docker compose logs -f
+
+# Stop services
+docker compose down
+```
+
+#### Production Environment
+
+1. Copy the production environment file:
+   ```bash
+   cd deployment
+   cp .env.prod.example .env.prod
+   ```
+
+2. Update `.env.prod` with your production values
+
+3. Deploy:
+   ```bash
+   docker compose -f docker-compose.prod.yml up -d
+   ```
+
 ## Architecture
 
 The application follows a modular architecture:

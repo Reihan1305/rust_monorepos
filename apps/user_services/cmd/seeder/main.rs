@@ -1,4 +1,6 @@
-use user_services::common::{config::AppConfig, infrastructure};
+use std::env;
+
+use user_services::common::{infrastructure};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 #[tokio::main]
@@ -12,11 +14,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .with(tracing_subscriber::fmt::layer())
         .init();
 
-    let config = AppConfig::new()?;
-
+    let database_url: String =
+        env::var("DATABASE_URL").expect("DATABASE_URL environment variable is required");
+    let database_max_connections: u32 = env::var("DATABASE_MAX_CONNECTIONS")
+        .unwrap_or_else(|_| "10".to_string())
+        .parse()
+        .expect("Invalid DATABASE_MAX_CONNECTIONS");
     let _db_pool = infrastructure::database::create_pool(
-        &config.database.url,
-        config.database.max_connections,
+        &database_url,
+        database_max_connections,
     )
     .await?;
 

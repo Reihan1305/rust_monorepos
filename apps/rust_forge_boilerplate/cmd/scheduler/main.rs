@@ -14,7 +14,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .with(tracing_subscriber::fmt::layer())
         .init();
 
-    let database_url =
+    let database_url: String =
         env::var("DATABASE_URL").expect("DATABASE_URL environment variable is required");
     let database_max_connections: u32 = env::var("DATABASE_MAX_CONNECTIONS")
         .unwrap_or_else(|_| "10".to_string())

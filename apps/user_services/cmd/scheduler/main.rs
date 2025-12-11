@@ -1,6 +1,8 @@
+use std::env;
+
 use tokio_cron_scheduler::{Job, JobScheduler};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
-use user_services::common::{config::AppConfig, infrastructure};
+use user_services::common::infrastructure;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -13,13 +15,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .with(tracing_subscriber::fmt::layer())
         .init();
 
-    let config = AppConfig::new()?;
+    let database_url: String =
+        env::var("DATABASE_URL").expect("DATABASE_URL environment variable is required");
+    let database_max_connections: u32 = env::var("DATABASE_MAX_CONNECTIONS")
+        .unwrap_or_else(|_| "10".to_string())
+        .parse()
+        .expect("Invalid DATABASE_MAX_CONNECTIONS");
 
-    let _db_pool = infrastructure::database::create_pool(
-        &config.database.url,
-        config.database.max_connections,
-    )
-    .await?;
+    let _db_pool =
+        infrastructure::database::create_pool(&database_url, database_max_connections).await?;
 
     tracing::info!("Scheduler started");
 
