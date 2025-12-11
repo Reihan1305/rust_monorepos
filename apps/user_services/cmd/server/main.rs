@@ -1,12 +1,21 @@
+use std::sync::Arc;
+
 use actix_web::{middleware::Logger, App, HttpServer};
 use user_services::{
-    common::{config::AppConfig, infrastructure},
-    healthcheck_modules, user_modules,
+    common::{
+        config::AppConfig,
+        infrastructure::{self, database::DatabaseTrait},
+    },
+    healthcheck_modules,
+    user_modules::{self, repo::UserRepo, service::UserServices},
 };
 
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    let user_repo = Arc::new(UserRepo::new());
+    let user_services = Arc::new(UserServices::new(user_repo));
+
     dotenv::dotenv().ok();
 
     tracing_subscriber::registry()
@@ -18,20 +27,17 @@ async fn main() -> std::io::Result<()> {
 
     let config = AppConfig::new().expect("Failed to load configuration");
 
-    // Initialize database pool
-    let db_pool = infrastructure::database::create_pool(
+    let db_pool = infrastructure::database::PostgresDatabase::create_pool(
         &config.database.url,
         config.database.max_connections,
     )
     .await
     .expect("Failed to create database pool");
 
-    // Initialize Redis connection
     let redis_conn = infrastructure::redis::create_connection(&config.redis.url)
         .await
         .expect("Failed to create Redis connection");
 
-    // Initialize MongoDB
     let mongo_db =
         infrastructure::mongodb::create_client(&config.mongodb.url, &config.mongodb.database)
             .await
@@ -43,6 +49,7 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
         App::new()
             .wrap(Logger::default())
+            .app_data(actix_web::web::Data::new(user_services.clone()))
             .app_data(actix_web::web::Data::new(db_pool.clone()))
             .app_data(actix_web::web::Data::new(redis_conn.clone()))
             .app_data(actix_web::web::Data::new(mongo_db.clone()))

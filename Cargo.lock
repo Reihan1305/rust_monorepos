@@ -3239,6 +3239,7 @@ dependencies = [
  "dotenv",
  "mongodb",
  "redis",
+ "regex",
  "serde",
  "serde_json",
  "sqlx",

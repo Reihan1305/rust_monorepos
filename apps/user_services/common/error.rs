@@ -1,8 +1,9 @@
 use actix_web::{error::ResponseError, http::StatusCode, HttpResponse};
 use serde::{Deserialize, Serialize};
+use sqlx::Error;
 use std::fmt;
 
-#[derive(Debug,Serialize,Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub enum AppError {
     InternalError(String),
     BadRequest(String),
@@ -16,6 +17,10 @@ pub enum AppError {
 struct ErrorResponse {
     error: String,
     message: String,
+}
+
+pub trait AppErrorTrait {
+    fn map_db_error(err: Error) -> AppError;
 }
 
 impl fmt::Display for AppError {
@@ -49,6 +54,30 @@ impl ResponseError for AppError {
             message: self.to_string(),
         };
         HttpResponse::build(self.status_code()).json(error_response)
+    }
+}
+
+impl AppErrorTrait for AppError {
+    fn map_db_error(err: Error) -> Self {
+        if let Error::Database(db_err) = &err {
+            let code = db_err.code().unwrap_or_default();
+            let constraint = db_err.constraint().unwrap_or_default();
+            if code == "23505" {
+                let parts: Vec<&str> = constraint.split('_').collect();
+                let field: String;
+                if parts.len() < 3 {
+                    field = constraint.to_string();
+                } else {
+                    let field_parts = &parts[1..parts.len() - 1];
+
+                    field = field_parts.join(" ");
+                }
+
+                return AppError::BadRequest(format!("{} already exists", field).into());
+            }
+        }
+
+        return AppError::InternalError(err.to_string());
     }
 }
 
