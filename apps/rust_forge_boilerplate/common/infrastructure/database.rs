@@ -1,4 +1,4 @@
-use sqlx::{postgres::PgPoolOptions, PgPool, Pool, Postgres};
+use sqlx::{PgPool, Pool, Postgres, postgres::PgPoolOptions};
 #[async_trait::async_trait]
 pub trait DbPoolTrait<T>
 where

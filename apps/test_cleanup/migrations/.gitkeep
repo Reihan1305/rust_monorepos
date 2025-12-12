@@ -1,3 +1,0 @@
-# Migration files will be placed here
-# Use: sqlx migrate add <migration_name>
-# Example: sqlx migrate add create_users_table

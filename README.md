@@ -166,18 +166,3 @@ npx nx show project rust_forge_boilerplate
 # List all projects
 npx nx show projects
 ```
-
-## 📚 Learn More
-
-- [Nx Documentation](https://nx.dev)
-- [Monodon Rust Plugin](https://github.com/nrwl/monodon)
-- [Rust Book](https://doc.rust-lang.org/book/)
-- [Cargo Book](https://doc.rust-lang.org/cargo/)
-
-## 🤝 Contributing
-
-1. Create a new branch for your feature
-2. Make your changes
-3. Run tests: `npx nx run-many -t test`
-4. Run linting: `npx nx run-many -t lint`
-5. Submit a pull request
