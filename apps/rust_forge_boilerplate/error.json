@@ -10,5 +10,10 @@
   "3102": "External service error",
   "3103": "Rate limit exceeded for this service",
   "3104": "Invalid API key",
-  "3105": "Service maintenance mode"
+  "3105": "Service maintenance mode",
+  "3006": "Payment processing failed",
+  "3007": "User account suspended",
+  "3008": "Insufficient permissions for this operation",
+  "3009": "Resource quota exceeded",
+  "3010": "Invalid file format"
 }

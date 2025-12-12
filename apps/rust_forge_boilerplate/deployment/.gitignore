@@ -1,11 +1,3 @@
-# Environment files
-.env
-.env.prod
-
-# Nginx config with secrets
-nginx.conf
-
-# SSL certificates
 ssl/
 *.pem
 *.key

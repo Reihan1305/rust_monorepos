@@ -30,7 +30,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     loop {
         // TODO: Implement job processing logic
-        // Example: fetch jobs from Redis queue, process them
         tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
         tracing::info!("Worker tick...");
     }
