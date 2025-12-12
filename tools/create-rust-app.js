@@ -79,7 +79,8 @@ function createRustApp(appName) {
   console.log(`🦀 Creating Rust app: ${appName}`);
 
   function applyReplacements(content) {
-    return content.replace(/rust_forge_boilerplate/g, appName);
+    console.log("ini content: ", content);
+    return content.replace(/rust_app_template/g, appName);
   }
 
   copyDir(templateDir, targetDir, applyReplacements);

@@ -44,7 +44,7 @@ fn load_global_error_messages() -> &'static HashMap<String, String> {
 
 fn load_service_error_messages() -> &'static HashMap<String, String> {
     SERVICE_ERROR_MESSAGES.get_or_init(|| {
-        let default_path = "apps/rust_forge_boilerplate/error.json";
+        let default_path = "apps/rust_app_template/error.json";
         let file_path =
             env::var("SERVICE_ERROR_FILE_PATH").unwrap_or_else(|_| default_path.to_string());
 
