@@ -1,4 +1,4 @@
-use actix_web::{middleware::Logger, App, HttpServer};
+use actix_web::{App, HttpServer, middleware::Logger};
 use rust_forge_boilerplate::{
     common::infrastructure::{self, redis::RedisClient},
     healthcheck_modules::{self, repo::HealthCheckRepo},

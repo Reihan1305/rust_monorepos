@@ -4,7 +4,7 @@ use crate::healthcheck_modules::{
     dto::{HealthResponse, ReadinessResponse},
     service::{HealthCheckService, HealthCheckServicesTrait},
 };
-use actix_web::{web, HttpResponse};
+use actix_web::{HttpResponse, web};
 use redis::aio::ConnectionManager;
 use sqlx::PgPool;
 
