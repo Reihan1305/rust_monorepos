@@ -1,4 +1,4 @@
-use rust_forge_boilerplate::common::infrastructure::{self, redis::RedisClient};
+use rust_app_template::common::infrastructure::{self, redis::RedisClient};
 use std::env;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 

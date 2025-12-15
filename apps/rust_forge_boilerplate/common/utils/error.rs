@@ -1,12 +1,14 @@
-use actix_web::{HttpResponse, error::ResponseError, http::StatusCode};
-use serde::Serialize;
+use actix_web::{HttpResponse, http::StatusCode};
+use serde_json::json;
+
 use std::{collections::HashMap, env, fmt, fs, sync::OnceLock};
 
 #[derive(Debug, Clone)]
 pub struct AppError {
     code: u16,
     message: String,
-    http_code: Option<u16>,
+    http_code: StatusCode,
+    errors: Option<String>,
 }
 
 static GLOBAL_ERROR_MESSAGES: OnceLock<HashMap<String, String>> = OnceLock::new();
@@ -64,69 +66,65 @@ fn get_error_message(code: u16, fallback: &str) -> String {
     message.unwrap_or_else(|| fallback.to_string())
 }
 
-#[derive(Serialize)]
-struct ErrorResponse {
-    code: u16,
-    message: String,
-}
-
 impl AppError {
-    pub fn new(code: u16, message: Option<String>, http_code: Option<u16>) -> Self {
-        let message = message.unwrap_or_else(|| get_error_message(code, &format!("Error code: {}", code)));
-        Self {
+    pub fn new(code: u16, http_code: Option<StatusCode>) -> Self {
+        let message = get_error_message(code, &format!("Error code: {}", code));
+        if let Some(code_http) = http_code {
+            return Self {
+                code,
+                message,
+                http_code: code_http,
+                errors: None,
+            };
+        };
+        return Self {
             code,
             message,
-            http_code,
+            http_code: StatusCode::INTERNAL_SERVER_ERROR,
+            errors: None,
+        };
+    }
+
+    pub fn map_db_error(err: sqlx::Error) -> Self {
+        if let sqlx::Error::Database(db_err) = &err {
+            let code = db_err.code().unwrap_or_default();
+            let constraint = db_err.constraint().unwrap_or_default();
+            if code == "23505" {
+                let parts: Vec<&str> = constraint.split('_').collect();
+                let field: String;
+                if parts.len() < 3 {
+                    field = constraint.to_string();
+                } else {
+                    let field_parts = &parts[1..parts.len() - 1];
+
+                    field = field_parts.join(" ");
+                }
+
+                let message = get_error_message(3011, "a database error occurred");
+                return Self {
+                    code: 3005,
+                    message: message,
+                    http_code: StatusCode::INTERNAL_SERVER_ERROR,
+                    errors: Some(format!("{} already exists", field)),
+                };
+            }
         }
+        let message = get_error_message(3005, "a database error occurred");
+        return Self {
+            code: 3005,
+            message: message,
+            http_code: StatusCode::INTERNAL_SERVER_ERROR,
+            errors: None,
+        };
     }
 
-    pub fn with_code(code: u16) -> Self {
-        Self::new(code, None, None)
-    }
-
-    pub fn with_message(code: u16, message: String) -> Self {
-        Self::new(code, Some(message), None)
-    }
-
-    pub fn with_http_code(code: u16, message: Option<String>, http_code: u16) -> Self {
-        Self::new(code, message, Some(http_code))
-    }
-
-    pub fn get_message(&self) -> &str {
-        &self.message
-    }
-
-    pub fn get_error_code(&self) -> u16 {
-        self.code
-    }
-
-    pub fn get_http_code(&self) -> u16 {
-        self.http_code.unwrap_or(400)
-    }
-
-    // Convenience constructors for common errors
-    pub fn internal_error(message: Option<String>) -> Self {
-        Self::with_http_code(1000, message, 500)
-    }
-
-    pub fn bad_request(message: Option<String>) -> Self {
-        Self::with_http_code(1001, message, 400)
-    }
-
-    pub fn not_found(message: Option<String>) -> Self {
-        Self::with_http_code(1002, message, 404)
-    }
-
-    pub fn unauthorized(message: Option<String>) -> Self {
-        Self::with_http_code(1003, message, 401)
-    }
-
-    pub fn validation_error(message: Option<String>) -> Self {
-        Self::with_http_code(1004, message, 422)
-    }
-
-    pub fn database_error(message: Option<String>) -> Self {
-        Self::with_http_code(1005, message, 500)
+    pub fn http_response_builder(&self) -> HttpResponse {
+        let error_response = json!({
+            "code": self.code,
+            "message": self.message,
+            "errors": self.errors,
+        });
+        HttpResponse::build(self.http_code).json(error_response)
     }
 }
 
@@ -135,32 +133,5 @@ impl fmt::Display for AppError {
         write!(f, "{}", self.message)
     }
 }
-
-impl ResponseError for AppError {
-    fn status_code(&self) -> StatusCode {
-        match self.get_http_code() {
-            400 => StatusCode::BAD_REQUEST,
-            401 => StatusCode::UNAUTHORIZED,
-            403 => StatusCode::FORBIDDEN,
-            404 => StatusCode::NOT_FOUND,
-            422 => StatusCode::UNPROCESSABLE_ENTITY,
-            429 => StatusCode::TOO_MANY_REQUESTS,
-            500 => StatusCode::INTERNAL_SERVER_ERROR,
-            502 => StatusCode::BAD_GATEWAY,
-            503 => StatusCode::SERVICE_UNAVAILABLE,
-            _ => StatusCode::BAD_REQUEST, // Default fallback
-        }
-    }
-
-    fn error_response(&self) -> HttpResponse {
-        let error_response = ErrorResponse {
-            code: self.code,
-            message: self.message.clone(),
-        };
-        HttpResponse::build(self.status_code()).json(error_response)
-    }
-}
-
-
 
 pub type AppResult<T> = Result<T, AppError>;

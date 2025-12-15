@@ -15,5 +15,6 @@
   "3007": "User account suspended",
   "3008": "Insufficient permissions for this operation",
   "3009": "Resource quota exceeded",
-  "3010": "Invalid file format"
+  "3010": "Invalid file format",
+  "3011": "data already exists"
 }

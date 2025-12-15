@@ -1,5 +1,5 @@
 use actix_web::{App, HttpServer, middleware::Logger};
-use rust_forge_boilerplate::{
+use rust_app_template::{
     common::infrastructure::{self, redis::RedisClient},
     healthcheck_modules::{self, repo::HealthCheckRepo},
 };

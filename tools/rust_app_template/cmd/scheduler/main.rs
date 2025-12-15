@@ -1,4 +1,4 @@
-use rust_forge_boilerplate::common::infrastructure;
+use rust_app_template::common::infrastructure;
 use std::env;
 use tokio_cron_scheduler::{Job, JobScheduler};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};

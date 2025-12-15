@@ -3,7 +3,7 @@ services:
   postgres:
     image: postgres:15-alpine
     environment:
-      POSTGRES_DB: rust_forge_boilerplate_db
+      POSTGRES_DB: rust_app_template_db
       POSTGRES_USER: user
       POSTGRES_PASSWORD: password
     volumes:
@@ -39,7 +39,7 @@ services:
 #     env_file:
 #       - ../.env
 #     environment:
-#       - DATABASE_URL=postgresql://user:password@postgres:5432/rust_forge_boilerplate_db
+#       - DATABASE_URL=postgresql://user:password@postgres:5432/rust_app_template_db
 #     depends_on:
 #       postgres:
 #         condition: service_healthy
